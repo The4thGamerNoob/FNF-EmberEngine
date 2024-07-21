@@ -16,8 +16,8 @@ to start you off, disabling Videos should be simple, simply Delete the line `"VI
 same goes for *Lua Scripts*, comment out or delete the line with `LUA_ALLOWED`, this and other customization options are all available within the `Project.xml` file
 
 ## Credits:
-* The4thGamerNoob - Programmer
-* EmberAshes598 - Artist
+* The4thGamerNoob - Founder, Programmer
+* EmberAshes598 - Co-Founder, Artist
 * rosh - Artist
 * The Psych Engine Team
 _____________________________________
