@@ -1,5 +1,6 @@
 package backend;
 
+import backend.ExtraKeysHandler.EKNoteColor;
 import flixel.util.FlxSave;
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
@@ -25,6 +26,8 @@ import states.TitleState;
 	public var camZooms:Bool = true;
 	public var hideHud:Bool = false;
 	public var noteOffset:Int = 0;
+
+	//Warning: These aren't used!! Modify data/extrakeys.json instead!
 	public var arrowRGB:Array<Array<FlxColor>> = [
 		[0xFFC24B99, 0xFFFFFFFF, 0xFF3C1F56],
 		[0xFF00FFFF, 0xFFFFFFFF, 0xFF1542B7],
@@ -149,12 +152,31 @@ class ClientPrefs {
 	public static function loadDefaultKeys()
 	{
 		defaultKeys = keyBinds.copy();
+		var saveDataKeybinds = ExtraKeysHandler.instance.data.keybinds;
+
+		// if resetting keybinds to default doesnt work, hmu
+		for (i in 0...saveDataKeybinds.length) {
+			var maniaKeybinds = saveDataKeybinds[i];
+			var maniaID = '${i}_key';
+			for (j in 0...maniaKeybinds.length) {
+				var keybindID = '${maniaID}_$j';
+				var codes = maniaKeybinds[j];
+				defaultKeys.set(keybindID, codes);
+			}
+		}
 		defaultButtons = gamepadBinds.copy();
 	}
 
 	public static function saveSettings() {
 		for (key in Reflect.fields(data))
-			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
+			if (key != 'arrowRGB' && key != 'arrowRGBPixel') {
+				Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
+			} #if sys 
+			else if (key == 'arrowRGB')
+				saveArrowRGBData('arrowRGB.json', data.arrowRGB);
+			else if (key == 'arrowRGBPixel')
+				saveArrowRGBData('arrowRGBPixel.json', data.arrowRGBPixel);
+			#end
 
 		#if ACHIEVEMENTS_ALLOWED Achievements.save(); #end
 		FlxG.save.flush();
@@ -163,17 +185,125 @@ class ClientPrefs {
 		var save:FlxSave = new FlxSave();
 		save.bind('controls_v3', CoolUtil.getSavePath());
 		save.data.keyboard = keyBinds;
+
+		var saveDataKeybinds:Array<Array<Array<Int>>> = [
+			[], [], [], [], [], [], [], [], []
+		];
+
+		// if you encounter issues with this system please.
+		// at me @tposejank in Psych Ward!! Dont break the rules tho
+		for (k in keyBinds.keys()) {
+			if (k.contains('key')) {
+				//trace('EK Keybind detected: $k');
+				var storeNum = Std.parseInt(k.split('_')[0]);
+
+				var convertKeycodes = keyBinds.get(k);
+				var newKeycodes:Array<Int> = [];
+				for (key in convertKeycodes) { newKeycodes.push(key); }
+
+				var index = Std.parseInt(k.split('_')[2]);
+
+				saveDataKeybinds[storeNum].insert(index, newKeycodes);
+
+				//trace('$k saved to $storeNum with codes ${keyBinds.get(k)} and index $index');
+			}
+		}
+
+		var saveKeybindData:EKKeybindSavedData = new EKKeybindSavedData(saveDataKeybinds);
+		var writer = new json2object.JsonWriter<EKKeybindSavedData>();
+		var content = writer.write(saveKeybindData, '  ');
+		#if sys
+		trace('Saved ekkeybinds.json');
+		File.saveContent('ekkeybinds.json', content);
+		#end
+
 		save.data.gamepad = gamepadBinds;
 		save.flush();
 		FlxG.log.add("Settings saved!");
+	}
+
+	#if sys
+	public static function saveArrowRGBData(path:String, rgbArray:Array<Array<FlxColor>>) {
+		var saveArrowRGB:ArrowRGBSavedData;
+		var colors:Array<EKNoteColor> = [];
+		for (color in rgbArray) {
+			var inner = color[0];
+			var border = color[1];
+			var outline = color[2];
+
+			var resultColor = new EKNoteColor();
+			resultColor.inner = inner.toHexString(false, false);
+			resultColor.border = border.toHexString(false, false);
+			resultColor.outline = outline.toHexString(false, false);
+
+			colors.push(resultColor);
+
+			trace('Saved color ${resultColor.inner} ${resultColor.border} ${resultColor.outline}');
+		}
+
+		saveArrowRGB = new ArrowRGBSavedData(colors);
+		var writer = new json2object.JsonWriter<ArrowRGBSavedData>();
+		var content = writer.write(saveArrowRGB, '    ');
+		File.saveContent(path, content);
+
+		trace('Wrote to $path');
+	}
+	#end
+
+	public static function loadArrowRGBData(path:String, pixel:Bool = false, defaultColors:Array<EKNoteColor>) {
+		var savedColors:CoolUtil.ArrowRGBSavedData = CoolUtil.getArrowRGB(path, defaultColors);
+
+		if (pixel)
+			ClientPrefs.defaultData.arrowRGBPixel = [];
+		else
+			ClientPrefs.defaultData.arrowRGB = [];
+
+		for (defaultColor in defaultColors) {
+			var thisNote = [
+				CoolUtil.colorFromString(defaultColor.inner), 
+				CoolUtil.colorFromString(defaultColor.border), 
+				CoolUtil.colorFromString(defaultColor.outline)
+			];
+			if (pixel)
+				ClientPrefs.defaultData.arrowRGBPixel.push(thisNote);
+			else
+				ClientPrefs.defaultData.arrowRGB.push(thisNote);
+		}
+
+		if (pixel)
+			ClientPrefs.data.arrowRGBPixel = [];
+		else
+			ClientPrefs.data.arrowRGB = [];
+
+		for (color in savedColors.colors) {
+			var thisNote = [
+				CoolUtil.colorFromString(color.inner), 
+				CoolUtil.colorFromString(color.border), 
+				CoolUtil.colorFromString(color.outline)
+			];
+
+			trace('Loaded color into save: $thisNote, pixel? $pixel');
+
+			if (pixel)
+				ClientPrefs.data.arrowRGBPixel.push(thisNote);
+			else
+				ClientPrefs.data.arrowRGB.push(thisNote);
+		}
 	}
 
 	public static function loadPrefs() {
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 
 		for (key in Reflect.fields(data))
-			if (key != 'gameplaySettings' && Reflect.hasField(FlxG.save.data, key))
+			if (key != 'gameplaySettings' && 
+				key != 'arrowRGB' &&
+				key != 'arrowRGBPixel' && Reflect.hasField(FlxG.save.data, key))
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
+			else if (key == 'arrowRGB') {
+					loadArrowRGBData('arrowRGB.json', false, ExtraKeysHandler.instance.data.colors);
+			} else if (key == 'arrowRGBPixel') {
+					loadArrowRGBData('arrowRGBPixel.json', true, ExtraKeysHandler.instance.data.pixelNoteColors);
+			}
 		
 		if(Main.fpsVar != null)
 			Main.fpsVar.visible = data.showFPS;
@@ -226,6 +356,23 @@ class ClientPrefs {
 				for (control => keys in loadedControls)
 					if(keyBinds.exists(control)) keyBinds.set(control, keys);
 			}
+
+			var savedKeybindJson = CoolUtil.getKeybinds('ekkeybinds.json', ExtraKeysHandler.instance.data.keybinds);
+			//trace(savedKeybindJson.keybinds);
+			var saveDataKeybinds = savedKeybindJson.keybinds;
+
+			for (i in 0...saveDataKeybinds.length) {
+				var maniaKeybinds = saveDataKeybinds[i];
+				var maniaID = '${i}_key';
+				for (j in 0...maniaKeybinds.length) {
+					var keybindID = '${maniaID}_$j';
+					var codes = maniaKeybinds[j];
+					//trace('Set $keybindID to $codes');
+
+					keyBinds.set(keybindID, codes);
+				}
+			}
+			
 			if(save.data.gamepad != null)
 			{
 				var loadedControls:Map<String, Array<FlxGamepadInputID>> = save.data.gamepad;

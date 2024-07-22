@@ -1,5 +1,6 @@
 package options;
 
+import backend.ExtraKeysHandler;
 import backend.InputFormatter;
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
@@ -13,36 +14,13 @@ import flixel.input.gamepad.FlxGamepadManager;
 class ControlsSubState extends MusicBeatSubstate
 {
 	var curSelected:Int = 0;
+	var curEKPage:Int = 3;
 	var curAlt:Bool = false;
 
+	static var defaultKey:String = 'Reset to Default Keys';
+
 	//Show on gamepad - Display name - Save file key - Rebind display name
-	var options:Array<Dynamic> = [
-		[true, 'NOTES'],
-		[true, 'Left', 'note_left', 'Note Left'],
-		[true, 'Down', 'note_down', 'Note Down'],
-		[true, 'Up', 'note_up', 'Note Up'],
-		[true, 'Right', 'note_right', 'Note Right'],
-		[true],
-		[true, 'UI'],
-		[true, 'Left', 'ui_left', 'UI Left'],
-		[true, 'Down', 'ui_down', 'UI Down'],
-		[true, 'Up', 'ui_up', 'UI Up'],
-		[true, 'Right', 'ui_right', 'UI Right'],
-		[true],
-		[true, 'Reset', 'reset', 'Reset'],
-		[true, 'Accept', 'accept', 'Accept'],
-		[true, 'Back', 'back', 'Back'],
-		[true, 'Pause', 'pause', 'Pause'],
-		[false],
-		[false, 'VOLUME'],
-		[false, 'Mute', 'volume_mute', 'Volume Mute'],
-		[false, 'Up', 'volume_up', 'Volume Up'],
-		[false, 'Down', 'volume_down', 'Volume Down'],
-		[false],
-		[false, 'DEBUG'],
-		[false, 'Key 1', 'debug_1', 'Debug Key #1'],
-		[false, 'Key 2', 'debug_2', 'Debug Key #2']
-	];
+	var options:Array<Dynamic> = [];
 	var curOptions:Array<Int>;
 	var curOptionsValid:Array<Int>;
 	static var defaultKey:String = 'Reset to Default Keys';
@@ -53,6 +31,8 @@ class ControlsSubState extends MusicBeatSubstate
 	var grpOptions:FlxTypedGroup<Alphabet>;
 	var grpBinds:FlxTypedGroup<Alphabet>;
 	var selectSpr:AttachedSprite;
+
+	var tipTxt:FlxText;
 
 	var gamepadColor:FlxColor = 0xfffd7194;
 	var keyboardColor:FlxColor = 0xff7192fd;
@@ -67,10 +47,6 @@ class ControlsSubState extends MusicBeatSubstate
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Controls Menu", null);
 		#end
-
-		options.push([true]);
-		options.push([true]);
-		options.push([true, defaultKey]);
 
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.color = keyboardColor;
@@ -104,6 +80,13 @@ class ControlsSubState extends MusicBeatSubstate
 		controllerSpr.animation.add('gamepad', [1], 1, false);
 		add(controllerSpr);
 
+		var tipX = 20;
+		var tipY = 660;
+		tipTxt = new FlxText(tipX, tipY + 24, 0, '[Keyboard Only] Press Q or E to change the Extra Keys Page.', 16);
+		tipTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		tipTxt.borderSize = 2;
+		add(tipTxt);
+
 		var text:Alphabet = new Alphabet(60, 90, 'CTRL', false);
 		text.alignment = CENTERED;
 		text.setScale(0.4);
@@ -127,6 +110,47 @@ class ControlsSubState extends MusicBeatSubstate
 		grpBinds.clear();
 
 		var myID:Int = 0;
+
+		// this approach is also null safe. you wont run to NORs with this way
+		options = [[false, 'NOTES']];
+		for (k in ClientPrefs.keyBinds.keys()) {
+			var idxPage = Std.parseInt(k.split('_')[0]);
+			var nteIdx = Std.parseInt(k.split('_')[2]);
+			if (idxPage == curEKPage) {
+				options.push([false, '${idxPage + 1}K ${nteIdx + 1}', k, '${idxPage + 1} Keys Note ${nteIdx + 1}']);
+			}
+		}
+
+		var optionsTemplate:Array<Dynamic> = [
+			[false],
+			[true, 'UI'],
+			[true, 'Left', 'ui_left', 'UI Left'],
+			[true, 'Down', 'ui_down', 'UI Down'],
+			[true, 'Up', 'ui_up', 'UI Up'],
+			[true, 'Right', 'ui_right', 'UI Right'],
+			[true],
+			[true, 'Reset', 'reset', 'Reset'],
+			[true, 'Accept', 'accept', 'Accept'],
+			[true, 'Back', 'back', 'Back'],
+			[true, 'Pause', 'pause', 'Pause'],
+			[false],
+			[false, 'VOLUME'],
+			[false, 'Mute', 'volume_mute', 'Volume Mute'],
+			[false, 'Up', 'volume_up', 'Volume Up'],
+			[false, 'Down', 'volume_down', 'Volume Down'],
+			[false],
+			[false, 'DEBUG'],
+			[false, 'Key 1', 'debug_1', 'Debug Key #1'],
+			[false, 'Key 2', 'debug_2', 'Debug Key #2'],
+			[true],
+			[true],
+			[true, defaultKey]
+		];
+
+		for (thing in optionsTemplate) {
+			options.push(thing);
+		}
+
 		for (i in 0...options.length)
 		{
 			var option:Array<Dynamic> = options[i];
@@ -288,6 +312,13 @@ class ControlsSubState extends MusicBeatSubstate
 			if(FlxG.keys.justPressed.UP || FlxG.gamepads.anyJustPressed(DPAD_UP) || FlxG.gamepads.anyJustPressed(LEFT_STICK_DIGITAL_UP)) updateText(-1);
 			else if(FlxG.keys.justPressed.DOWN || FlxG.gamepads.anyJustPressed(DPAD_DOWN) || FlxG.gamepads.anyJustPressed(LEFT_STICK_DIGITAL_DOWN)) updateText(1);
 
+			if(FlxG.keys.justPressed.Q || FlxG.keys.justPressed.E && onKeyboardMode) {
+				curEKPage += FlxG.keys.justPressed.E ? 1 : -1;
+				if (curEKPage < 0) curEKPage = 0;
+				if (curEKPage > ExtraKeysHandler.instance.data.maxKeys) curEKPage = ExtraKeysHandler.instance.data.maxKeys;
+				createTexts();
+			}
+			
 			if(FlxG.keys.justPressed.ENTER || FlxG.gamepads.anyJustPressed(START) || FlxG.gamepads.anyJustPressed(A))
 			{
 				if(options[curOptions[curSelected]][1] != defaultKey)

@@ -1,5 +1,6 @@
 package options;
 
+import backend.ExtraKeysHandler;
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.shapes.FlxShapeCircle;
@@ -49,7 +50,21 @@ class NotesSubState extends MusicBeatSubstate
 
 	public function new() {
 		super();
-		
+
+		PlayState.SONG = {
+			song: 'Test',
+			notes: [],
+			events: [],
+			bpm: 150.0,
+			mania: ExtraKeysHandler.instance.data.maxKeys,
+			needsVoices: true,
+			player1: 'bf',
+			player2: 'dad',
+			gfVersion: 'gf',
+			speed: 1,
+			stage: 'stage'
+		};
+
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Note Colors Menu", null);
 		#end
@@ -189,6 +204,14 @@ class NotesSubState extends MusicBeatSubstate
 			return;
 		}
 
+		for (i in 0...myNotes.members.length) {
+			var note = myNotes.members[i];
+			var targetY = i - curSelectedNote;
+			var lerpVal:Float = Math.exp(-elapsed * 9.6);
+			note.x = FlxMath.lerp((targetY * 100) + (notesBG.x + ((notesBG.width / 2) - (note.width / 2))), note.x, lerpVal);
+			note.y = FlxMath.lerp((targetY * 1.3 * 200) + (notesBG.y + ((notesBG.height / 2) - (note.height / 2))), note.y, lerpVal);
+		}
+		
 		super.update(elapsed);
 
 		// Early controller checking
