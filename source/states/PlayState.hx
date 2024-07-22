@@ -2982,7 +2982,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if(!note.noAnimation) {
-			var animToPlay:String = singAnimations(note.noteData);
+			var animToPlay:String = singAnimation(note.noteData);
 
 			var char:Character = boyfriend;
 			var animCheck:String = 'hey';

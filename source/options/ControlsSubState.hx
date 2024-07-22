@@ -23,7 +23,6 @@ class ControlsSubState extends MusicBeatSubstate
 	var options:Array<Dynamic> = [];
 	var curOptions:Array<Int>;
 	var curOptionsValid:Array<Int>;
-	static var defaultKey:String = 'Reset to Default Keys';
 
 	var bg:FlxSprite;
 	var grpDisplay:FlxTypedGroup<Alphabet>;
