@@ -24,5 +24,5 @@ _____________________________________
 
 # Features
 
-## Other Gameplay Features:
+## Multikey:
 * Up to 9 note strums!
