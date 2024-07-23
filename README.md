@@ -25,4 +25,4 @@ _____________________________________
 # Features
 
 ## Other Gameplay Features:
-* Up to 18 note strums!
+* Up to 9 note strums!
