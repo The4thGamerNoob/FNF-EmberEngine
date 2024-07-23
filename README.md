@@ -24,4 +24,5 @@ _____________________________________
 
 # Features
 
-Coming Soon!
+## Other Gameplay Features:
+* Up to 18 note strums!
