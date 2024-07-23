@@ -164,6 +164,7 @@ class ClientPrefs {
 				defaultKeys.set(keybindID, codes);
 			}
 		}
+
 		defaultButtons = gamepadBinds.copy();
 	}
 
@@ -186,6 +187,7 @@ class ClientPrefs {
 		save.bind('controls_v3', CoolUtil.getSavePath());
 		save.data.keyboard = keyBinds;
 
+		// this was NOT that easy
 		var saveDataKeybinds:Array<Array<Array<Int>>> = [
 			[], [], [], [], [], [], [], [], []
 		];
