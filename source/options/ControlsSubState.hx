@@ -31,7 +31,7 @@ class ControlsSubState extends MusicBeatSubstate
 	var grpBinds:FlxTypedGroup<Alphabet>;
 	var selectSpr:AttachedSprite;
 
-	var tipTxt:FlxText;
+	var tipTxt:Alphabet;
 
 	var gamepadColor:FlxColor = 0xfffd7194;
 	var keyboardColor:FlxColor = 0xff7192fd;
@@ -79,11 +79,11 @@ class ControlsSubState extends MusicBeatSubstate
 		controllerSpr.animation.add('gamepad', [1], 1, false);
 		add(controllerSpr);
 
-		var tipX = 20;
-		var tipY = 660;
-		tipTxt = new FlxText(tipX, tipY + 24, 0, '[Keyboard Only] Press Q or E to change the Extra Keys Page.', 16);
-		tipTxt.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		tipTxt.borderSize = 2;
+		var tipX = 140;
+		var tipY = 50;
+		tipTxt = new Alphabet(tipX, tipY, 'Press Q or E to change the Extra Keys Page.', false);
+		tipTxt.alignment = CENTERED;
+		tipTxt.setScale(0.2);
 		add(tipTxt);
 
 		var text:Alphabet = new Alphabet(60, 90, 'CTRL', false);
@@ -533,6 +533,7 @@ class ControlsSubState extends MusicBeatSubstate
 	{
 		if(colorTween != null) colorTween.destroy();
 		colorTween = FlxTween.color(bg, 0.5, bg.color, onKeyboardMode ? gamepadColor : keyboardColor, {ease: FlxEase.linear});
+		tipTxt.alpha = onKeyboardMode ? 0 : 1;
 		onKeyboardMode = !onKeyboardMode;
 
 		curSelected = 0;
