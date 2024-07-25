@@ -86,7 +86,7 @@ class NotesSubState extends MusicBeatSubstate
 		modeBG.alpha = 0.4;
 		add(modeBG);
 
-		notesBG = new FlxSprite(140, 190).makeGraphic(480, 125, FlxColor.BLACK);
+		notesBG = new FlxSprite(310, 190).makeGraphic(130, 125, FlxColor.BLACK);
 		notesBG.visible = false;
 		notesBG.alpha = 0.4;
 		add(notesBG);
@@ -208,8 +208,8 @@ class NotesSubState extends MusicBeatSubstate
 			var note = myNotes.members[i];
 			var targetY = i - curSelectedNote;
 			var lerpVal:Float = Math.exp(-elapsed * 9.6);
-			note.x = FlxMath.lerp((targetY * 100) + (notesBG.x + ((notesBG.width / 2) - (note.width / 2))), note.x, lerpVal);
-			note.y = FlxMath.lerp((targetY * 1.3 * 200) + (notesBG.y + ((notesBG.height / 2) - (note.height / 2))), note.y, lerpVal);
+			note.x = FlxMath.lerp((targetY * 120) + (notesBG.x + ((notesBG.width / 2) - (note.width / 2))), note.x, lerpVal);
+			note.y = FlxMath.lerp((targetY * 1.3) + (notesBG.y + ((notesBG.height / 2) - (note.height / 2))), note.y, lerpVal);
 		}
 		
 		super.update(elapsed);

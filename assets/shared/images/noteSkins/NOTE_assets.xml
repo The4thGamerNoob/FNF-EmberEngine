@@ -74,4 +74,16 @@
 	<SubTexture name="up press0001" x="802" y="643" width="144" height="141" frameX="-5" frameY="-4" frameWidth="153" frameHeight="150"/>
 	<SubTexture name="up press0002" x="946" y="643" width="153" height="150"/>
 	<SubTexture name="up press0003" x="946" y="643" width="153" height="150"/>
+	<SubTexture name="yellow0000" x="566" y="0" width="154" height="157"/>
+	<SubTexture name="yellow hold end0000" x="0" y="0" width="50" height="64"/>
+	<SubTexture name="yellow hold piece0000" x="50" y="0" width="50" height="44"/>
+	<SubTexture name="darkpurple0000" x="100" y="0" width="157" height="154"/>
+	<SubTexture name="darkpurple hold end0000" x="0" y="0" width="50" height="64"/>
+	<SubTexture name="darkpurple hold piece0000" x="50" y="0" width="50" height="44"/>
+	<SubTexture name="darkred0000" x="409" y="0" width="157" height="155"/>
+	<SubTexture name="darkred hold end0000" x="0" y="0" width="50" height="64"/>
+	<SubTexture name="darkred hold piece0000" x="50" y="0" width="50" height="44"/>
+	<SubTexture name="darkblue0000" x="720" y="0" width="154" height="157"/>
+	<SubTexture name="darkblue hold end0000" x="0" y="0" width="50" height="64"/>
+	<SubTexture name="darkblue hold piece0000" x="50" y="0" width="50" height="44"/>
 </TextureAtlas>
