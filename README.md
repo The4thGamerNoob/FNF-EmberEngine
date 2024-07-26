@@ -1,5 +1,5 @@
 # Friday Night Funkin' - Ember Engine
-Engine intended to be a fork of Psych Engine aiming to be a full softcoding engine with more features
+An Engine intended to be a fork of Psych Engine.
 
 ## Installation:
 
