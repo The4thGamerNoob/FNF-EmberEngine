@@ -1,5 +1,5 @@
-# Friday Night Funkin' - Newbie's Psych Engine
-Engine originally used on [Newbie's Mod](https://gamebanana.com/mods/), intended to be a fork of Psych Engine.
+# Friday Night Funkin' - Ember Engine
+Engine intended to be a fork of Psych Engine aiming to be a full softcoding engine
 
 ## Installation:
 
