@@ -9,7 +9,7 @@ import options.OptionsState;
 
 class MainMenuState extends MusicBeatState
 {	
-	public static var newbiesPsychEngineVersion:String = '0.1.0'; // This is also used for Discord RPC
+	public static var emberEngineVersion:String = '0.0.1-beta'; // This is also used for Discord RPC
 	public static var psychEngineVersion:String = '0.7.3'; // This is also used for Discord RPC
 	public static var curSelected:Int = 0;
 
@@ -88,10 +88,10 @@ class MainMenuState extends MusicBeatState
 			menuItem.screenCenter(X);
 		}
 
-		var newbiesPsychVer:FlxText = new FlxText(12, FlxG.height - 64, 0, "Newbie's Psych Engine v" + newbiesPsychEngineVersion, 12);
-		newbiesPsychVer.scrollFactor.set();
-		newbiesPsychVer.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		add(newbiesPsychVer);
+		var emberVer:FlxText = new FlxText(12, FlxG.height - 64, 0, "Ember Engine v" + emberEngineVersion, 12);
+		emberVer.scrollFactor.set();
+		emberVer.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(emberVer);
 		var psychVer:FlxText = new FlxText(12, FlxG.height - 44, 0, "Psych Engine v" + psychEngineVersion, 12);
 		psychVer.scrollFactor.set();
 		psychVer.setFormat("VCR OSD Mono", 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
