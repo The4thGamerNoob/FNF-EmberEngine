@@ -289,6 +289,7 @@ class PlayState extends MusicBeatState
 			'note_down',
 			'note_up',
 			'note_right'
+			#end
 		];
 		#if MULTIKEY_ALLOWED
 		for (i in 0...SONG.mania + 1){
