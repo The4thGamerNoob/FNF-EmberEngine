@@ -29,7 +29,9 @@ import haxe.CallStack;
 import haxe.io.Path;
 #end
 
+#if MULTIKEY_ALLOWED
 import backend.ExtraKeysHandler;
+#end
 
 #if linux
 @:cppInclude('./external/gamemode_client.h')
@@ -107,7 +109,7 @@ class Main extends Sprite
 		#if LUA_ALLOWED Lua.set_callbacks_function(cpp.Callable.fromStaticFunction(psychlua.CallbackHandler.call)); #end
 		Controls.instance = new Controls();
 		
-		ExtraKeysHandler.instance = new ExtraKeysHandler();
+		#if MULTIKEY_ALLOWED ExtraKeysHandler.instance = new ExtraKeysHandler(); #end
 		ClientPrefs.loadDefaultKeys();
 
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end

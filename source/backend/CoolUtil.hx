@@ -159,6 +159,7 @@ class CoolUtil
 		}
 	}
 
+	#if MULTIKEY_ALLOWED
 	public static function getArrowRGB(path:String = 'arrowRGB.json', defaultArrowRGB:Array<EKNoteColor>):ArrowRGBSavedData {
 		var result:ArrowRGBSavedData;
 		var content:String = '';
@@ -217,8 +218,10 @@ class CoolUtil
 
 		return result;
 	}
+	#end
 }
 
+#if MULTIKEY_ALLOWED
 class ArrowRGBSavedData {
 	public var colors:Array<EKNoteColor>;
 
@@ -234,3 +237,4 @@ class EKKeybindSavedData {
 		this.keybinds = keybinds;
 	}
 }
+#end

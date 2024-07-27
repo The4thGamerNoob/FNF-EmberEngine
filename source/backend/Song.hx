@@ -19,7 +19,9 @@ typedef SwagSong =
 	var gfVersion:String;
 	var stage:String;
 
+	#if MULTIKEY_ALLOWED
 	@:optional var mania:Int;
+	#end
 
 	@:optional var gameOverChar:String;
 	@:optional var gameOverSound:String;
@@ -84,11 +86,13 @@ class Song
 			}
 		}
 
+		#if MULTIKEY_ALLOWED
 		// fix mania being null (for non ek charts)
 		if (songJson.mania == null)
 		{
 			songJson.mania = 3;
 		}
+		#end
 	}
 
 	public function new(song, notes, bpm)

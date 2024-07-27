@@ -1,6 +1,9 @@
 package backend;
 
+#if MULTIKEY_ALLOWED
 import backend.ExtraKeysHandler.EKNoteColor;
+#end
+
 import flixel.util.FlxSave;
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepadInputID;
@@ -154,6 +157,7 @@ class ClientPrefs {
 	public static function loadDefaultKeys()
 	{
 		defaultKeys = keyBinds.copy();
+		#if MULTIKEY_ALLOWED
 		var saveDataKeybinds = ExtraKeysHandler.instance.data.keybinds;
 
 		// if resetting keybinds to default doesnt work, hmu
@@ -166,19 +170,23 @@ class ClientPrefs {
 				defaultKeys.set(keybindID, codes);
 			}
 		}
+		#end
 
 		defaultButtons = gamepadBinds.copy();
 	}
 
 	public static function saveSettings() {
 		for (key in Reflect.fields(data))
+			#if MULTIKEY_ALLOWED
 			if (key != 'arrowRGB' && key != 'arrowRGBPixel') {
 				Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
 			} #if sys 
 			else if (key == 'arrowRGB')
 				saveArrowRGBData('arrowRGB.json', data.arrowRGB);
 			else if (key == 'arrowRGBPixel')
-				saveArrowRGBData('arrowRGBPixel.json', data.arrowRGBPixel);
+				saveArrowRGBData('arrowRGBPixel.json', data.arrowRGBPixel); #end
+			#else
+			Reflect.setField(FlxG.save.data, key, Reflect.field(data, key));
 			#end
 
 		#if ACHIEVEMENTS_ALLOWED Achievements.save(); #end
@@ -189,6 +197,7 @@ class ClientPrefs {
 		save.bind('controls_v3', CoolUtil.getSavePath());
 		save.data.keyboard = keyBinds;
 
+		#if MULTIKEY_ALLOWED
 		// this was NOT that easy
 		var saveDataKeybinds:Array<Array<Array<Int>>> = [
 			[], [], [], [], [], [], [], [], []
@@ -218,7 +227,7 @@ class ClientPrefs {
 		var content = writer.write(saveKeybindData, '  ');
 		#if sys
 		trace('Saved ekkeybinds.json');
-		File.saveContent('ekkeybinds.json', content);
+		File.saveContent('ekkeybinds.json', content); #end
 		#end
 
 		save.data.gamepad = gamepadBinds;
@@ -226,6 +235,7 @@ class ClientPrefs {
 		FlxG.log.add("Settings saved!");
 	}
 
+	#if MULTIKEY_ALLOWED
 	#if sys
 	public static function saveArrowRGBData(path:String, rgbArray:Array<Array<FlxColor>>) {
 		var saveArrowRGB:ArrowRGBSavedData;
@@ -251,8 +261,7 @@ class ClientPrefs {
 		File.saveContent(path, content);
 
 		trace('Wrote to $path');
-	}
-	#end
+	} #end
 
 	public static function loadArrowRGBData(path:String, pixel:Bool = false, defaultColors:Array<EKNoteColor>) {
 		var savedColors:CoolUtil.ArrowRGBSavedData = CoolUtil.getArrowRGB(path, defaultColors);
@@ -294,20 +303,27 @@ class ClientPrefs {
 				ClientPrefs.data.arrowRGB.push(thisNote);
 		}
 	}
+	#end
 
 	public static function loadPrefs() {
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 
 		for (key in Reflect.fields(data))
+			#if MULTIKEY_ALLOWED
 			if (key != 'gameplaySettings' && 
 				key != 'arrowRGB' &&
 				key != 'arrowRGBPixel' && Reflect.hasField(FlxG.save.data, key))
+			#else
+			if (key != 'gameplaySettings' && Reflect.hasField(FlxG.save.data, key))
+			#end
 				Reflect.setField(data, key, Reflect.field(FlxG.save.data, key));
+			#if MULTIKEY_ALLOWED
 			else if (key == 'arrowRGB') {
 					loadArrowRGBData('arrowRGB.json', false, ExtraKeysHandler.instance.data.colors);
 			} else if (key == 'arrowRGBPixel') {
 					loadArrowRGBData('arrowRGBPixel.json', true, ExtraKeysHandler.instance.data.pixelNoteColors);
 			}
+			#end
 		
 		if(Main.fpsVar != null)
 			Main.fpsVar.visible = data.showFPS;
@@ -361,6 +377,7 @@ class ClientPrefs {
 					if(keyBinds.exists(control)) keyBinds.set(control, keys);
 			}
 
+			#if MULTIKEY_ALLOWED
 			var savedKeybindJson = CoolUtil.getKeybinds('ekkeybinds.json', ExtraKeysHandler.instance.data.keybinds);
 			//trace(savedKeybindJson.keybinds);
 			var saveDataKeybinds = savedKeybindJson.keybinds;
@@ -376,6 +393,7 @@ class ClientPrefs {
 					keyBinds.set(keybindID, codes);
 				}
 			}
+			#end
 			
 			if(save.data.gamepad != null)
 			{

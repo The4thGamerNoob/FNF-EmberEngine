@@ -1,6 +1,8 @@
 package options;
 
+#if MULTIKEY_ALLOWED
 import backend.ExtraKeysHandler;
+#end
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
 import flixel.addons.display.shapes.FlxShapeCircle;
@@ -51,6 +53,7 @@ class NotesSubState extends MusicBeatSubstate
 	public function new() {
 		super();
 
+		#if MULTIKEY_ALLOWED
 		PlayState.SONG = {
 			song: 'Test',
 			notes: [],
@@ -64,6 +67,7 @@ class NotesSubState extends MusicBeatSubstate
 			speed: 1,
 			stage: 'stage'
 		};
+		#end
 
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Note Colors Menu", null);
@@ -86,7 +90,7 @@ class NotesSubState extends MusicBeatSubstate
 		modeBG.alpha = 0.4;
 		add(modeBG);
 
-		notesBG = new FlxSprite(310, 190).makeGraphic(130, 125, FlxColor.BLACK);
+		notesBG = new FlxSprite(#if MULTIKEY_ALLOWED 310 #else 140 #end , 190).makeGraphic(#if MULTIKEY_ALLOWED 130 #else 400 #end , 125, FlxColor.BLACK);
 		notesBG.visible = false;
 		notesBG.alpha = 0.4;
 		add(notesBG);
@@ -204,6 +208,7 @@ class NotesSubState extends MusicBeatSubstate
 			return;
 		}
 
+		#if MULTIKEY_ALLOWED
 		for (i in 0...myNotes.members.length) {
 			var note = myNotes.members[i];
 			var targetY = i - curSelectedNote;
@@ -211,6 +216,7 @@ class NotesSubState extends MusicBeatSubstate
 			note.x = FlxMath.lerp((targetY * 120) + (notesBG.x + ((notesBG.width / 2) - (note.width / 2))), note.x, lerpVal);
 			note.y = FlxMath.lerp((targetY * 1.3) + (notesBG.y + ((notesBG.height / 2) - (note.height / 2))), note.y, lerpVal);
 		}
+		#end
 		
 		super.update(elapsed);
 

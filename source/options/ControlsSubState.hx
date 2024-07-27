@@ -1,6 +1,8 @@
 package options;
 
+#if MULTIKEY_ALLOWED
 import backend.ExtraKeysHandler;
+#end
 import backend.InputFormatter;
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
@@ -14,13 +16,43 @@ import flixel.input.gamepad.FlxGamepadManager;
 class ControlsSubState extends MusicBeatSubstate
 {
 	var curSelected:Int = 0;
+	#if MULTIKEY_ALLOWED
 	var curEKPage:Int = 3;
+	#end
 	var curAlt:Bool = false;
 
 	static var defaultKey:String = 'Reset to Default Keys';
 
 	//Show on gamepad - Display name - Save file key - Rebind display name
-	var options:Array<Dynamic> = [];
+	var options:Array<Dynamic> = [
+		#if !MULTIKEY_ALLOWED
+		[true, 'NOTES'],
+		[true, 'Left', 'note_left', 'Note Left'],
+		[true, 'Down', 'note_down', 'Note Down'],
+		[true, 'Up', 'note_up', 'Note Up'],
+		[true, 'Right', 'note_right', 'Note Right'],
+		[true],
+		[true, 'UI'],
+		[true, 'Left', 'ui_left', 'UI Left'],
+		[true, 'Down', 'ui_down', 'UI Down'],
+		[true, 'Up', 'ui_up', 'UI Up'],
+		[true, 'Right', 'ui_right', 'UI Right'],
+		[true],
+		[true, 'Reset', 'reset', 'Reset'],
+		[true, 'Accept', 'accept', 'Accept'],
+		[true, 'Back', 'back', 'Back'],
+		[true, 'Pause', 'pause', 'Pause'],
+		[false],
+		[false, 'VOLUME'],
+		[false, 'Mute', 'volume_mute', 'Volume Mute'],
+		[false, 'Up', 'volume_up', 'Volume Up'],
+		[false, 'Down', 'volume_down', 'Volume Down'],
+		[false],
+		[false, 'DEBUG'],
+		[false, 'Key 1', 'debug_1', 'Debug Key #1'],
+		[false, 'Key 2', 'debug_2', 'Debug Key #2']
+		#end
+	];
 	var curOptions:Array<Int>;
 	var curOptionsValid:Array<Int>;
 
@@ -31,7 +63,7 @@ class ControlsSubState extends MusicBeatSubstate
 	var grpBinds:FlxTypedGroup<Alphabet>;
 	var selectSpr:AttachedSprite;
 
-	var tipTxt:Alphabet;
+	#if MULTIKEY_ALLOWED var tipTxt:Alphabet; #end
 
 	var gamepadColor:FlxColor = 0xfffd7194;
 	var keyboardColor:FlxColor = 0xff7192fd;
@@ -79,12 +111,14 @@ class ControlsSubState extends MusicBeatSubstate
 		controllerSpr.animation.add('gamepad', [1], 1, false);
 		add(controllerSpr);
 
+		#if MULTIKEY_ALLOWED
 		var tipX = 140;
 		var tipY = 50;
 		tipTxt = new Alphabet(tipX, tipY, 'Press Q or E to change the Extra Keys Page.', false);
 		tipTxt.alignment = CENTERED;
 		tipTxt.setScale(0.2);
 		add(tipTxt);
+		#end
 
 		var text:Alphabet = new Alphabet(60, 90, 'CTRL', false);
 		text.alignment = CENTERED;
@@ -110,6 +144,7 @@ class ControlsSubState extends MusicBeatSubstate
 
 		var myID:Int = 0;
 
+		#if MULTIKEY_ALLOWED
 		// this approach is also null safe. you wont run to NORs with this way
 		options = [[false, 'NOTES']];
 		for (k in ClientPrefs.keyBinds.keys()) {
@@ -149,6 +184,7 @@ class ControlsSubState extends MusicBeatSubstate
 		for (thing in optionsTemplate) {
 			options.push(thing);
 		}
+		#end
 
 		for (i in 0...options.length)
 		{
@@ -311,12 +347,14 @@ class ControlsSubState extends MusicBeatSubstate
 			if(FlxG.keys.justPressed.UP || FlxG.gamepads.anyJustPressed(DPAD_UP) || FlxG.gamepads.anyJustPressed(LEFT_STICK_DIGITAL_UP)) updateText(-1);
 			else if(FlxG.keys.justPressed.DOWN || FlxG.gamepads.anyJustPressed(DPAD_DOWN) || FlxG.gamepads.anyJustPressed(LEFT_STICK_DIGITAL_DOWN)) updateText(1);
 
+			#if MULTIKEY_ALLOWED
 			if(FlxG.keys.justPressed.Q || FlxG.keys.justPressed.E && onKeyboardMode) {
 				curEKPage += FlxG.keys.justPressed.E ? 1 : -1;
 				if (curEKPage < 0) curEKPage = 0;
 				if (curEKPage > ExtraKeysHandler.instance.data.maxKeys) curEKPage = ExtraKeysHandler.instance.data.maxKeys;
 				createTexts();
 			}
+			#end
 			
 			if(FlxG.keys.justPressed.ENTER || FlxG.gamepads.anyJustPressed(START) || FlxG.gamepads.anyJustPressed(A))
 			{
@@ -533,7 +571,7 @@ class ControlsSubState extends MusicBeatSubstate
 	{
 		if(colorTween != null) colorTween.destroy();
 		colorTween = FlxTween.color(bg, 0.5, bg.color, onKeyboardMode ? gamepadColor : keyboardColor, {ease: FlxEase.linear});
-		tipTxt.alpha = onKeyboardMode ? 0 : 1;
+		#if MULTIKEY_ALLOWED tipTxt.alpha = onKeyboardMode ? 0 : 1; #end
 		onKeyboardMode = !onKeyboardMode;
 
 		curSelected = 0;

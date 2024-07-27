@@ -1,8 +1,10 @@
 package states;
 
+#if MULTIKEY_ALLOWED
 import objects.StrumNote.KeybindShowcase;
 import backend.ExtraKeysHandler;
 import objects.StrumNote.StrumBoundaries;
+#end
 import backend.Highscore;
 import backend.StageData;
 import backend.WeekData;
@@ -281,10 +283,18 @@ class PlayState extends MusicBeatState
 		PauseSubState.songName = null; //Reset to default
 		playbackRate = ClientPrefs.getGameplaySetting('songspeed');
 
-		keysArray = [];
+		keysArray = [
+			#if !MULTIKEY_ALLOWED
+			'note_left',
+			'note_down',
+			'note_up',
+			'note_right'
+		];
+		#if MULTIKEY_ALLOWED
 		for (i in 0...SONG.mania + 1){
 			keysArray.push(SONG.mania + '_key_$i');
 		}
+		#end
 
 		if(FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -631,7 +641,7 @@ class PlayState extends MusicBeatState
 
 		resetRPC();
 
-		setOnScripts('mania', SONG.mania);
+		#if MULTIKEY_ALLOWED setOnScripts('mania', SONG.mania); #end
 
 		callOnScripts('onCreatePost');
 
@@ -1321,10 +1331,10 @@ class PlayState extends MusicBeatState
 			for (songNotes in section.sectionNotes)
 			{
 				var daStrumTime:Float = songNotes[0];
-				var daNoteData:Int = Std.int(songNotes[1] % (SONG.mania + 1));
+				var daNoteData:Int = Std.int(songNotes[1] % #if MULTIKEY_ALLOWED (SONG.mania + 1) #else 4 #end );
 				var gottaHitNote:Bool = section.mustHitSection;
 
-				if (songNotes[1] > SONG.mania)
+				if (songNotes[1] > #if MULTIKEY_ALLOWED SONG.mania #else 3 #end )
 				{
 					gottaHitNote = !section.mustHitSection;
 				}
@@ -1338,7 +1348,7 @@ class PlayState extends MusicBeatState
 				var swagNote:Note = new Note(daStrumTime, daNoteData, oldNote);
 				swagNote.mustPress = gottaHitNote;
 				swagNote.sustainLength = songNotes[2];
-				swagNote.gfNote = (section.gfSection && (songNotes[1]<(SONG.mania + 1)));
+				swagNote.gfNote = (section.gfSection && (songNotes[1]< #if MULTIKEY_ALLOWED (SONG.mania + 1) #else 4 #end ));
 				swagNote.noteType = songNotes[3];
 				if(!Std.isOfType(songNotes[3], String)) swagNote.noteType = ChartingState.noteTypeList[songNotes[3]]; //Backward compatibility + compatibility with Week 7 charts
 
@@ -1356,7 +1366,7 @@ class PlayState extends MusicBeatState
 
 						var sustainNote:Note = new Note(daStrumTime + (Conductor.stepCrochet * susNote), daNoteData, oldNote, true);
 						sustainNote.mustPress = gottaHitNote;
-						sustainNote.gfNote = (section.gfSection && (songNotes[1]<(SONG.mania + 1)));
+						sustainNote.gfNote = (section.gfSection && (songNotes[1]< #if MULTIKEY_ALLOWED (SONG.mania + 1) #else 4 #end ));
 						sustainNote.noteType = swagNote.noteType;
 						sustainNote.scrollFactor.set();
 						sustainNote.parent = swagNote;
@@ -1488,7 +1498,7 @@ class PlayState extends MusicBeatState
 	{
 		var strumLineX:Float = ClientPrefs.data.middleScroll ? STRUM_X_MIDDLESCROLL : STRUM_X;
 		var strumLineY:Float = ClientPrefs.data.downScroll ? (FlxG.height - 150) : 50;
-		for (i in 0...PlayState.SONG.mania + 1)
+		for (i in 0... #if MULTIKEY_ALLOWED PlayState.SONG.mania + 1 #else 4 #end )
 		{
 			// FlxG.log.add(i);
 			var targetAlpha:Float = 1;
@@ -1512,11 +1522,23 @@ class PlayState extends MusicBeatState
 			if (player == 1)
 				playerStrums.add(babyArrow);
 			else
+			{
+				#if !MULTIKEY_ALLOWED
+				if(ClientPrefs.data.middleScroll)
+				{
+					babyArrow.x += 310;
+					if(i > 1) { // Up and Right
+						babyArrow.x += FlxG.width / 2 + 25;
+					}
+				}
+				#end
 				opponentStrums.add(babyArrow);
+			}
 
 			strumLineNotes.add(babyArrow);
 			babyArrow.postAddedToGroup();
 		}
+	#if MULTIKEY_ALLOWED
 		adaptStrumline(opponentStrums);
 		adaptStrumline(playerStrums);
 
@@ -1551,6 +1573,7 @@ class PlayState extends MusicBeatState
 			trace('Strumline is too big! Shrinking and retrying.');
 			strumLineIsBig = strumLineWidth > StrumBoundaries.getBoundaryWidth().x;
 		}
+	#end
 	}
 
 	override function openSubState(SubState:FlxSubState)
@@ -2886,7 +2909,7 @@ class PlayState extends MusicBeatState
 			var suffix:String = '';
 			if(note != null) suffix = note.animSuffix;
 
-			var animToPlay:String = singAnimation(direction)+ 'miss' + suffix;
+			var animToPlay:String = #if MULTIKEY_ALLOWED singAnimation(direction) #else singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, direction)))] #end + 'miss' + suffix;
 			char.playAnim(animToPlay, true);
 
 			if(char != gf && lastCombo > 5 && gf != null && gf.animOffsets.exists('sad'))
@@ -2927,7 +2950,7 @@ class PlayState extends MusicBeatState
 					altAnim = '-alt';
 
 			var char:Character = dad;
-			var animToPlay:String = singAnimation(note.noteData) + altAnim;
+			var animToPlay:String = #if MULTIKEY_ALLOWED singAnimation(note.noteData) #else singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] #end + altAnim;
 			if(note.gfNote) char = gf;
 
 			if(char != null)
@@ -2982,7 +3005,7 @@ class PlayState extends MusicBeatState
 		}
 
 		if(!note.noAnimation) {
-			var animToPlay:String = singAnimation(note.noteData);
+			var animToPlay:String = #if MULTIKEY_ALLOWED singAnimation(note.noteData); #else singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))]; #end
 
 			var char:Character = boyfriend;
 			var animCheck:String = 'hey';

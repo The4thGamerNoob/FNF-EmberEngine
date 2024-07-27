@@ -1,8 +1,11 @@
 package objects;
 
+#if MULTIKEY_ALLOWED
 import backend.InputFormatter;
 import flixel.FlxBasic;
 import backend.ExtraKeysHandler;
+#end
+
 import backend.animation.PsychAnimationController;
 
 import shaders.RGBPalette;
@@ -16,9 +19,9 @@ class StrumNote extends FlxSprite
 	public var direction:Float = 90;//plan on doing scroll directions soon -bb
 	public var downScroll:Bool = false;//plan on doing scroll directions soon -bb
 	public var sustainReduce:Bool = true;
-	private var trackedScale:Float = 0.7;
+	#if MULTIKEY_ALLOWED private var trackedScale:Float = 0.7; #end
 	private var player:Int;
-	private var initialWidth:Float = 0;
+	#if MULTIKEY_ALLOWED private var initialWidth:Float = 0; #end
 	
 	public var texture(default, set):String = null;
 	private function set_texture(value:String):String {
@@ -37,20 +40,30 @@ class StrumNote extends FlxSprite
 		rgbShader.enabled = false;
 		if(PlayState.SONG != null && PlayState.SONG.disableNoteRGB) useRGBShader = false;
 		
+		#if MULTIKEY_ALLOWED
 		var mania = 3;
 		if (PlayState.SONG != null) mania = PlayState.SONG.mania;
 
 		var arrowRGBIndex = getIndex(mania, leData);
+		#end
 
-		var arr:Array<FlxColor> = ClientPrefs.data.arrowRGB[arrowRGBIndex];
-
-		if(PlayState.isPixelStage) arr = ClientPrefs.data.arrowRGBPixel[arrowRGBIndex];
+		var arr:Array<FlxColor> = ClientPrefs.data.arrowRGB[#if MULTIKEY_ALLOWED arrowRGBIndex #else leData #end ];
+		if(PlayState.isPixelStage) arr = ClientPrefs.data.arrowRGBPixel[#if MULTIKEY_ALLOWED arrowRGBIndex #else leData #end ];
 
 		@:bypassAccessor
 		{
+			#if !MULTIKEY_ALLOWED
+			@:bypassAccessor
+			{
+				rgbShader.r = arr[0];
+				rgbShader.g = arr[1];
+				rgbShader.b = arr[2];
+			}
+			#else
 			rgbShader.r = arr[0];
 			rgbShader.g = arr[1];
 			rgbShader.b = arr[2];
+			#end
 		}
 
 		noteData = leData;
@@ -84,7 +97,7 @@ class StrumNote extends FlxSprite
 			antialiasing = false;
 			setGraphicSize(Std.int(width * PlayState.daPixelZoom));
 
-			initialWidth = width;
+			#if !MULTIKEY_ALLOWED initialWidth = width; #end
 
 			animation.add('green', [6]);
 			animation.add('red', [7]);
@@ -113,21 +126,46 @@ class StrumNote extends FlxSprite
 		else
 		{
 			frames = Paths.getSparrowAtlas(texture);
-			// animation.addByPrefix('green', 'arrowUP');
-			// animation.addByPrefix('blue', 'arrowDOWN');
-			// animation.addByPrefix('purple', 'arrowLEFT');
-			// animation.addByPrefix('red', 'arrowRIGHT');
+			#if !MULTIKEY_ALLOWED 
+			animation.addByPrefix('green', 'arrowUP');
+			animation.addByPrefix('blue', 'arrowDOWN');
+			animation.addByPrefix('purple', 'arrowLEFT');
+			animation.addByPrefix('red', 'arrowRIGHT');
+			#else
 			initialWidth = width;
+			#end
 
 			antialiasing = ClientPrefs.data.antialiasing;
-			setGraphicSize(Std.int(width * trackedScale));
+			setGraphicSize(Std.int(width * #if MULTIKEY_ALLOWED trackedScale #else 0.7 #end ));
 
+			#if MULTIKEY_ALLOWED
 			var mania = 3;
 			if (PlayState.SONG != null) mania = PlayState.SONG.mania;
 
 			animation.addByPrefix('static', 'arrow${getAnimSet(getIndex(mania, noteData)).strum}');
 			animation.addByPrefix('pressed', '${getAnimSet(getIndex(mania, noteData)).anim} press', 24, false);
 			animation.addByPrefix('confirm', '${getAnimSet(getIndex(mania, noteData)).anim} confirm', 24, false);
+			#else
+			switch (Math.abs(noteData) % 4)
+			{
+				case 0:
+					animation.addByPrefix('static', 'arrowLEFT');
+					animation.addByPrefix('pressed', 'left press', 24, false);
+					animation.addByPrefix('confirm', 'left confirm', 24, false);
+				case 1:
+					animation.addByPrefix('static', 'arrowDOWN');
+					animation.addByPrefix('pressed', 'down press', 24, false);
+					animation.addByPrefix('confirm', 'down confirm', 24, false);
+				case 2:
+					animation.addByPrefix('static', 'arrowUP');
+					animation.addByPrefix('pressed', 'up press', 24, false);
+					animation.addByPrefix('confirm', 'up confirm', 24, false);
+				case 3:
+					animation.addByPrefix('static', 'arrowRIGHT');
+					animation.addByPrefix('pressed', 'right press', 24, false);
+					animation.addByPrefix('confirm', 'right confirm', 24, false);
+			}
+			#end
 		}
 		updateHitbox();
 
@@ -137,26 +175,31 @@ class StrumNote extends FlxSprite
 		}
 	}
 
+	#if MULTIKEY_ALLOWED
 	public function retryBound() {
 		trackedScale = trackedScale * 0.85;
 		setGraphicSize(Std.int(initialWidth * trackedScale));
 		updateHitbox();
 		postAddedToGroup();
 	}
+	#end
 
 	public function postAddedToGroup() {
 		playAnim('static');
+
+		#if MULTIKEY_ALLOWED
 		var padding:Int = 0;
 		if (PlayState.SONG.mania > 4) {
 			padding = 4 * (PlayState.SONG.mania - 4);
 		}
-
-		// x = StrumBoundaries.getMiddlePoint().x;
-		// x += ((Note.swagWidthUnscaled * trackedScale) - padding) * (-((PlayState.SONG.mania + 1) / 2) + noteData);
-		// x += 25;
-		// x += ((FlxG.width / 2) * player);
+		#else
+		x += ((Note.swagWidthUnscaled * trackedScale) - padding) * (-((PlayState.SONG.mania + 1) / 2) + noteData);
+		x += 50;
+		x += ((FlxG.width / 2) * player);
+		#end
 		ID = noteData;
 
+	#if MULTIKEY_ALLOWED
 		centerStrum(padding);
 	}
 
@@ -171,6 +214,7 @@ class StrumNote extends FlxSprite
 			}
 			x += ((Note.swagWidthUnscaled * trackedScale) - padding) * (-((PlayState.SONG.mania+1) / 2) + noteData);
 		}
+	#end
 	}
 
 	override function update(elapsed:Float) {
@@ -194,6 +238,7 @@ class StrumNote extends FlxSprite
 		if(useRGBShader) rgbShader.enabled = (animation.curAnim != null && animation.curAnim.name != 'static');
 	}
 
+#if MULTIKEY_ALLOWED
 	public function getIndex(mania:Int, note:Int) {
 		return ExtraKeysHandler.instance.data.keys[mania].notes[note];
 	}
@@ -214,8 +259,10 @@ class StrumBoundaries {
 	public static function getBoundaryWidth():FlxPoint {
 		return new FlxPoint(Std.int((maxBoundaryOpponent.x - minBoundaryOpponent.x)),Std.int((maxBoundaryOpponent.y - minBoundaryOpponent.y)));
 	}
+#end
 }
 
+#if MULTIKEY_ALLOWED
 class KeybindShowcase extends FlxTypedGroup<FlxBasic> {
 	public var background:FlxSprite;
 	public var keyText:FlxText;
@@ -272,3 +319,4 @@ class KeybindShowcase extends FlxTypedGroup<FlxBasic> {
 		});
 	}
 }
+#end

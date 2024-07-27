@@ -1,6 +1,8 @@
 package states.editors;
 
+#if MULTIKEY_ALLOWED
 import backend.ExtraKeysHandler;
+#end
 import flash.geom.Rectangle;
 import haxe.Json;
 import haxe.format.JsonParser;
@@ -201,7 +203,7 @@ class ChartingState extends MusicBeatState
 				notes: [],
 				events: [],
 				bpm: 150.0,
-				mania: 3,
+				#if MULTIKEY_ALLOWED mania: 3, #end
 				needsVoices: true,
 				player1: 'bf',
 				player2: 'dad',
@@ -288,11 +290,13 @@ class ChartingState extends MusicBeatState
 		bpmTxt.scrollFactor.set();
 		add(bpmTxt);
 
-		// strumLine = new FlxSprite(0, 50).makeGraphic(Std.int(GRID_SIZE * 9), 4);
-		// add(strumLine);
+		#if !MULTIKEY_ALLOWED
+		strumLine = new FlxSprite(0, 50).makeGraphic(Std.int(GRID_SIZE * 9), 4);
+		add(strumLine);
+		#end
 
 		strumLineNotes = new FlxTypedGroup<StrumNote>();
-		for (i in 0...((_song.mania + 1) * 2)){
+		for (i in 0... #if MULTIKEY_ALLOWED ((_song.mania + 1) * 2) #else 8 #end ){
 			var note:StrumNote = new StrumNote(GRID_SIZE * (i+1), strumLine.y, i % (_song.mania + 1), 0);
 			note.setGraphicSize(GRID_SIZE, GRID_SIZE);
 			note.updateHitbox();
@@ -321,7 +325,7 @@ class ChartingState extends MusicBeatState
 		UI_box = new FlxUITabMenu(null, tabs, true);
 
 		UI_box.resize(300, 400);
-		UI_box.x = FlxG.width / 2 + 120;
+		UI_box.x = #if MULTIKEY_ALLOWED FlxG.width / 2 + 120; #else 640 + GRID_SIZE / 2; #end
 		UI_box.y = 25;
 		UI_box.scrollFactor.set();
 
@@ -487,11 +491,13 @@ class ChartingState extends MusicBeatState
 		stepperSpeed.value = _song.speed;
 		stepperSpeed.name = 'song_speed';
 		blockPressWhileTypingOnStepper.push(stepperSpeed);
-
+		
+		#if MULTIKEY_ALLOWED
 		var stepperMania:FlxUINumericStepper = new FlxUINumericStepper(100, stepperSpeed.y, 1, 3, ExtraKeysHandler.instance.data.minKeys, ExtraKeysHandler.instance.data.maxKeys, 1);
 		stepperMania.value = _song.mania;
 		stepperMania.name = 'song_mania';
 		blockPressWhileTypingOnStepper.push(stepperMania);
+		#end
 
 		#if MODS_ALLOWED
 		var directories:Array<String> = [Paths.mods('characters/'), Paths.mods(Mods.currentModDirectory + '/characters/'), Paths.getSharedPath('characters/')];
@@ -613,11 +619,11 @@ class ChartingState extends MusicBeatState
 		tab_group_song.add(loadEventJson);
 		tab_group_song.add(stepperBPM);
 		tab_group_song.add(stepperSpeed);
-		tab_group_song.add(stepperMania);
+		#if MULTIKEY_ALLOWED tab_group_song.add(stepperMania); #end
 		tab_group_song.add(new FlxText(stepperBPM.x, stepperBPM.y - 15, 0, 'Song BPM:'));
 		tab_group_song.add(new FlxText(stepperBPM.x + 100, stepperBPM.y - 15, 0, 'Song Offset:'));
 		tab_group_song.add(new FlxText(stepperSpeed.x, stepperSpeed.y - 15, 0, 'Song Speed:'));
-		tab_group_song.add(new FlxText(stepperMania.x, stepperMania.y - 15, 0, 'Mania:'));
+		#if MULTIKEY_ALLOWED tab_group_song.add(new FlxText(stepperMania.x, stepperMania.y - 15, 0, 'Mania:')); #end
 		tab_group_song.add(new FlxText(player2DropDown.x, player2DropDown.y - 15, 0, 'Opponent:'));
 		tab_group_song.add(new FlxText(gfVersionDropDown.x, gfVersionDropDown.y - 15, 0, 'Girlfriend:'));
 		tab_group_song.add(new FlxText(player1DropDown.x, player1DropDown.y - 15, 0, 'Boyfriend:'));
@@ -788,7 +794,7 @@ class ChartingState extends MusicBeatState
 			for (i in 0..._song.notes[curSec].sectionNotes.length)
 			{
 				var note:Array<Dynamic> = _song.notes[curSec].sectionNotes[i];
-				note[1] = (note[1] + (_song.mania + 1)) % ((_song.mania + 1) * 2);
+				note[1] = (note[1] + #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end ) % #if MULTIKEY_ALLOWED ((_song.mania + 1) * 2); #else 8; #end
 				_song.notes[curSec].sectionNotes[i] = note;
 			}
 			updateGrid();
@@ -841,10 +847,10 @@ class ChartingState extends MusicBeatState
 			for (note in _song.notes[curSec].sectionNotes)
 			{
 				var boob = note[1];
-				if (boob>_song.mania){
-					boob -= (_song.mania + 1);
+				if (boob> #if MULTIKEY_ALLOWED _song.mania #else 3 #end ){
+					boob -= #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 				}else{
-					boob += (_song.mania + 1);
+					boob += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 				}
 
 				var copiedNote:Array<Dynamic> = [note[0], boob, note[2], note[3]];
@@ -863,9 +869,9 @@ class ChartingState extends MusicBeatState
 			var duetNotes:Array<Array<Dynamic>> = [];
 			for (note in _song.notes[curSec].sectionNotes)
 			{
-				var boob = note[1]%(_song.mania + 1);
-				boob = _song.mania - boob;
-				if (note[1] > _song.mania) boob += (_song.mania + 1);
+				var boob = note[1]% #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
+				boob = #if MULTIKEY_ALLOWED _song.mania #else 3 #end - boob;
+				if (note[1] > #if MULTIKEY_ALLOWED _song.mania #else 3 #end ) boob += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 
 				note[1] = boob;
 				var copiedNote:Array<Dynamic> = [note[0], boob, note[2], note[3]];
@@ -1595,9 +1601,11 @@ class ChartingState extends MusicBeatState
 				case 'song_speed':
 					_song.speed = nums.value;
 				
+				#if MULTIKEY_ALLOWED
 				case 'song_mania':
 					_song.mania = Std.int(nums.value);
 					reloadGridLayer();
+				#end
 
 				case 'song_bpm':
 					_song.bpm = nums.value;
@@ -1710,7 +1718,7 @@ class ChartingState extends MusicBeatState
 	{
 		curStep = recalculateSteps();
 
-		camPos.x = -80 + (GRID_SIZE * ((_song.mania + 1) * 2));
+		#if MULTIKEY_ALLOWED camPos.x = -80 + (GRID_SIZE * ((_song.mania + 1) * 2)); #end
 
 		if(FlxG.sound.music.time < 0) {
 			FlxG.sound.music.pause();
@@ -1725,7 +1733,7 @@ class ChartingState extends MusicBeatState
 		_song.song = UI_songTitle.text;
 
 		strumLineUpdateY();
-		for (i in 0...strumLineNotes.members.length){
+		for (i in 0... #if MULTIKEY_ALLOWED strumLineNotes.members.length #else 8 #end ){
 			strumLineNotes.members[i].y = strumLine.y;
 		}
 
@@ -2036,9 +2044,12 @@ class ChartingState extends MusicBeatState
 				quant.animation.play('q', true, false, curQuant);
 			}
 			if(vortex && !blockInput){
-				// var controlArray:Array<Bool> = [FlxG.keys.justPressed.ONE, FlxG.keys.justPressed.TWO, FlxG.keys.justPressed.THREE, FlxG.keys.justPressed.FOUR,
-				// 							   FlxG.keys.justPressed.FIVE, FlxG.keys.justPressed.SIX, FlxG.keys.justPressed.SEVEN, FlxG.keys.justPressed.EIGHT];
+				#if !MULTIKEY_ALLOWED
+				var controlArray:Array<Bool> = [FlxG.keys.justPressed.ONE, FlxG.keys.justPressed.TWO, FlxG.keys.justPressed.THREE, FlxG.keys.justPressed.FOUR,
+				 							   FlxG.keys.justPressed.FIVE, FlxG.keys.justPressed.SIX, FlxG.keys.justPressed.SEVEN, FlxG.keys.justPressed.EIGHT];
+				#else
 				var controlArray:Array<Bool> = [false];
+				#end
 
 				if(controlArray.contains(true))
 				{
@@ -2084,9 +2095,12 @@ class ChartingState extends MusicBeatState
 					var datime = (feces - secStart) - (dastrum - secStart); //idk math find out why it doesn't work on any other section other than 0
 					if (curSelectedNote != null)
 					{
-						// var controlArray:Array<Bool> = [FlxG.keys.pressed.ONE, FlxG.keys.pressed.TWO, FlxG.keys.pressed.THREE, FlxG.keys.pressed.FOUR,
-						// 							   FlxG.keys.pressed.FIVE, FlxG.keys.pressed.SIX, FlxG.keys.pressed.SEVEN, FlxG.keys.pressed.EIGHT];
+						#if !MULTIKEY_ALLOWED
+						var controlArray:Array<Bool> = [FlxG.keys.pressed.ONE, FlxG.keys.pressed.TWO, FlxG.keys.pressed.THREE, FlxG.keys.pressed.FOUR,
+													   FlxG.keys.pressed.FIVE, FlxG.keys.pressed.SIX, FlxG.keys.pressed.SEVEN, FlxG.keys.pressed.EIGHT];
+						#else
 						var controlArray:Array<Bool> = [false];
+						#end
 
 						if(controlArray.contains(true))
 						{
@@ -2137,7 +2151,7 @@ class ChartingState extends MusicBeatState
 		Conductor.songPosition = FlxG.sound.music.time;
 		strumLineUpdateY();
 		camPos.y = strumLine.y;
-		for (i in 0...strumLineNotes.members.length){
+		for (i in 0... #if MULTIKEY_ALLOWED strumLineNotes.members.length #else 8 #end ){
 			strumLineNotes.members[i].y = strumLine.y;
 			strumLineNotes.members[i].alpha = FlxG.sound.music.playing ? 1 : 0.35;
 		}
@@ -2180,7 +2194,7 @@ class ChartingState extends MusicBeatState
 			note.alpha = 1;
 			if(curSelectedNote != null) {
 				var noteDataToCheck:Int = note.noteData;
-				if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += (_song.mania + 1);
+				if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 
 				if (curSelectedNote[0] == note.strumTime && ((curSelectedNote[2] == null && noteDataToCheck < 0) || (curSelectedNote[2] != null && curSelectedNote[1] == noteDataToCheck)))
 				{
@@ -2193,9 +2207,9 @@ class ChartingState extends MusicBeatState
 			if(note.strumTime <= Conductor.songPosition) {
 				note.alpha = 0.4;
 				if(note.strumTime > lastConductorPos && FlxG.sound.music.playing && note.noteData > -1) {
-					var data:Int = note.noteData % (_song.mania + 1);
+					var data:Int = note.noteData % #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 					var noteDataToCheck:Int = note.noteData;
-					if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += (_song.mania + 1);
+					if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 						strumLineNotes.members[noteDataToCheck].playAnim('confirm', true);
 						strumLineNotes.members[noteDataToCheck].resetAnim = ((note.sustainLength / 1000) + 0.15) / playbackSpeed;
 					if(!playedSound[data]) {
@@ -2205,7 +2219,7 @@ class ChartingState extends MusicBeatState
 							if(_song.player1 == 'gf') //Easter egg
 								soundToPlay = 'GF_' + Std.string(data + 1);
 
-							FlxG.sound.play(Paths.sound(soundToPlay)).pan = note.noteData < (_song.mania + 1)? -0.3 : 0.3; //would be coolio
+							FlxG.sound.play(Paths.sound(soundToPlay)).pan = note.noteData < #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end ? -0.3 : 0.3; //would be coolio
 							playedSound[data] = true;
 						}
 
@@ -2266,6 +2280,7 @@ class ChartingState extends MusicBeatState
 	var lastSecBeatsNext:Float = 0;
 	var columns:Int = 9;
 	function reloadGridLayer() {
+		#if MULTIKEY_ALLOWED
 		if (PlayState.SONG == null) {
 			PlayState.SONG = {
 				song: 'DUMMY',
@@ -2291,6 +2306,7 @@ class ChartingState extends MusicBeatState
 		rightIcon.setPosition(rightIconX, -100);
 
 		columns = (_song.mania * 2) + 3;
+		#end
 		
 		gridLayer.clear();
 		gridBG = FlxGridOverlay.create(1, 1, columns, Std.int(getSectionBeats() * 4 * zoomList[curZoom]));
@@ -2324,14 +2340,14 @@ class ChartingState extends MusicBeatState
 		if(foundNextSec)
 		{
 			var gridBlack:FlxSprite = new FlxSprite(0, gridBG.height).makeGraphic(1, 1, FlxColor.BLACK);
-			gridBlack.setGraphicSize(Std.int(GRID_SIZE * columns), Std.int(nextGridBG.height));
+			gridBlack.setGraphicSize(Std.int(GRID_SIZE * #if MULTIKEY_ALLOWED columns #else 9 #end ), Std.int(nextGridBG.height));
 			gridBlack.updateHitbox();
 			gridBlack.antialiasing = false;
 			gridBlack.alpha = 0.4;
 			gridLayer.add(gridBlack);
 		}
 
-		var gridBlackLine:FlxSprite = new FlxSprite(gridBG.x + gridBG.width - (GRID_SIZE * (_song.mania + 1))).makeGraphic(1, 1, FlxColor.BLACK);
+		var gridBlackLine:FlxSprite = new FlxSprite(gridBG.x + gridBG.width - (GRID_SIZE * #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end )).makeGraphic(1, 1, FlxColor.BLACK);
 		gridBlackLine.setGraphicSize(2, leHeight);
 		gridBlackLine.updateHitbox();
 		gridBlackLine.antialiasing = false;
@@ -2344,6 +2360,7 @@ class ChartingState extends MusicBeatState
 			if(vortex) gridLayer.add(beatsep);
 		}
 
+		#if MULTIKEY_ALLOWED
 		remove(strumLine);
 		strumLine = new FlxSprite(0, 50).makeGraphic(Std.int(GRID_SIZE * columns), 4);
 		add(strumLine);
@@ -2361,6 +2378,7 @@ class ChartingState extends MusicBeatState
 				note.scrollFactor.set(1, 1);
 			}
 		}
+		#end
 
 		var gridBlackLine:FlxSprite = new FlxSprite(gridBG.x + GRID_SIZE).makeGraphic(1, 1, FlxColor.BLACK);
 		gridBlackLine.setGraphicSize(2, leHeight);
@@ -2434,7 +2452,7 @@ class ChartingState extends MusicBeatState
 		}
 
 		// Draws
-		var gSize:Int = Std.int(GRID_SIZE * ((_song.mania + 1) * 2));
+		var gSize:Int = Std.int(GRID_SIZE * ( #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end * 2));
 		var hSize:Int = Std.int(gSize / 2);
 		var size:Float = 1;
 
@@ -2820,7 +2838,7 @@ class ChartingState extends MusicBeatState
 				daText.sprTracker = note;
 			}
 			note.mustPress = _song.notes[curSec].mustHitSection;
-			if(i[1] > _song.mania) note.mustPress = !note.mustPress;
+			if(i[1] > #if MULTIKEY_ALLOWED _song.mania #else 3 #end ) note.mustPress = !note.mustPress;
 		}
 
 		// CURRENT EVENTS
@@ -2882,7 +2900,7 @@ class ChartingState extends MusicBeatState
 		var daStrumTime = i[0];
 		var daSus:Dynamic = i[2];
 
-		var note:Note = new Note(daStrumTime, daNoteInfo % (_song.mania + 1), null, null, true);
+		var note:Note = new Note(daStrumTime, daNoteInfo % #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end , null, null, true);
 		if(daSus != null) { //Common note
 			if(!Std.isOfType(i[3], String)) //Convert old note type to new note type format
 			{
@@ -2912,10 +2930,10 @@ class ChartingState extends MusicBeatState
 		note.updateHitbox();
 		note.x = Math.floor(daNoteInfo * GRID_SIZE) + GRID_SIZE;
 		if(isNextSection && _song.notes[curSec].mustHitSection != _song.notes[curSec+1].mustHitSection) {
-			if(daNoteInfo > _song.mania) {
-				note.x -= GRID_SIZE * (_song.mania + 1);
+			if(daNoteInfo > #if MULTIKEY_ALLOWED _song.mania #else 3 #end ) {
+				note.x -= GRID_SIZE * #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 			} else if(daSus != null) {
-				note.x += GRID_SIZE * (_song.mania + 1);
+				note.x += GRID_SIZE * #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 			}
 		}
 
@@ -2970,7 +2988,7 @@ class ChartingState extends MusicBeatState
 
 		if(noteDataToCheck > -1)
 		{
-			if(note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += (_song.mania + 1);
+			if(note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 			for (i in _song.notes[curSec].sectionNotes)
 			{
 				if (i != curSelectedNote && i.length > 2 && i[0] == note.strumTime && i[1] == noteDataToCheck)
@@ -3001,7 +3019,7 @@ class ChartingState extends MusicBeatState
 	function deleteNote(note:Note):Void
 	{
 		var noteDataToCheck:Int = note.noteData;
-		if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += (_song.mania + 1);
+		if(noteDataToCheck > -1 && note.mustPress != _song.notes[curSec].mustHitSection) noteDataToCheck += #if MULTIKEY_ALLOWED (_song.mania + 1); #else 4; #end
 
 		if(note.noteData > -1) //Normal Notes
 		{
@@ -3043,7 +3061,7 @@ class ChartingState extends MusicBeatState
 		{
 			curRenderedNotes.forEachAlive(function(note:Note)
 			{
-				if (note.overlapsPoint(new FlxPoint(strumLineNotes.members[d].x + 1,strumLine.y+1)) && note.noteData == d%(_song.mania + 1))
+				if (note.overlapsPoint(new FlxPoint(strumLineNotes.members[d].x + 1,strumLine.y+1)) && note.noteData == d% #if MULTIKEY_ALLOWED (_song.mania + 1) #else 4 #end )
 				{
 						//trace('tryin to delete note...');
 						if(!delnote) deleteNote(note);
